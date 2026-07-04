@@ -6,6 +6,11 @@ import { chromium } from 'playwright';
 const EXTENSION_DIR = resolve(import.meta.dirname, '..');
 const COUNT_RE = /^\d+(\.\d+)?[KM]?$/;
 const COUNT_TIMEOUT_MS = 30000;
+// Cloudflare sometimes challenges the first navigation (especially from CI
+// IPs) but sets a context-wide clearance cookie shortly after, so failed
+// targets usually pass on a later attempt.
+const MAX_ATTEMPTS = 3;
+const RETRY_DELAY_MS = 10000;
 
 const TARGETS = [
     { name: 'problem page', url: 'https://leetcode.com/problems/two-sum/' },
@@ -46,21 +51,29 @@ async function main() {
             `--load-extension=${EXTENSION_DIR}`
         ]
     });
-    let failures = 0;
+    let pending = TARGETS;
     try {
-        for (const target of TARGETS) {
-            try {
-                await checkTarget(context, target);
-            } catch (err) {
-                failures++;
-                console.error(`FAIL - ${target.name} (${target.url}): ${err.message}`);
+        for (let attempt = 1; attempt <= MAX_ATTEMPTS && pending.length > 0; attempt++) {
+            if (attempt > 1) {
+                console.log(`retrying ${pending.length} failed target(s) (attempt ${attempt}/${MAX_ATTEMPTS})...`);
+                await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
             }
+            const failed = [];
+            for (const target of pending) {
+                try {
+                    await checkTarget(context, target);
+                } catch (err) {
+                    failed.push(target);
+                    console.error(`FAIL - ${target.name} (${target.url}): ${err.message}`);
+                }
+            }
+            pending = failed;
         }
     } finally {
         await context.close();
         rmSync(userDataDir, { recursive: true, force: true });
     }
-    if (failures > 0) {
+    if (pending.length > 0) {
         process.exit(1);
     }
     console.log('smoke test passed');
