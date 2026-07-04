@@ -1,0 +1,11 @@
+{
+    "name": "dislike-count-for-leetcode-tests",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "test": "node smoke.js"
+    },
+    "devDependencies": {
+        "playwright": "^1.53.0"
+    }
+}

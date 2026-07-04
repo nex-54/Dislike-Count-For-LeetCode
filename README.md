@@ -35,6 +35,17 @@ After editing `content.js`, reload the extension on `chrome://extensions` (click
    ```
 3. Run `./build.sh` and upload `dislike-count-for-leetcode-<version>.zip` to the Chrome Web Store.
 
+### Smoke test
+
+A Playwright smoke test loads the extension and checks that dislike counts appear on live leetcode.com pages.
+
+```sh
+cd test
+npm install
+npx playwright install chromium
+npm test
+```
+
 ## Screenshots
 
 ### Problem page
