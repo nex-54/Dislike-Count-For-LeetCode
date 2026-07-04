@@ -23,11 +23,17 @@ Supported pages: problem, editorial, solution
 
 ## Development
 
-To package a release zip for the Chrome Web Store, run:
+After editing `content.js`, reload the extension on `chrome://extensions` (click the reload icon), then refresh the LeetCode page to see the change.
 
-```sh
-./build.sh
-```
+### Releasing
+
+1. Update the `version` field in `manifest.json` and commit.
+2. Tag the release so the published package can be traced back to the exact source:
+   ```sh
+   git tag -a v<version> -m "Release <version>"
+   git push origin v<version>
+   ```
+3. Run `./build.sh` and upload `dislike-count-for-leetcode-<version>.zip` to the Chrome Web Store.
 
 ## Screenshots
 

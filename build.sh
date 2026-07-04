@@ -2,7 +2,7 @@
 set -eu
 cd "$(dirname "$0")"
 
-version=$(node -p "require('./manifest.json').version")
+version=$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' manifest.json)
 out="dislike-count-for-leetcode-$version.zip"
 
 rm -f "$out"
