@@ -126,7 +126,10 @@ function fetchSolutionCounts(topicId) {
 function findVoteButtons(pageType) {
     for (const icon of document.querySelectorAll(pageType.upIcon)) {
         const upButton = icon.closest('button');
-        if (!upButton) continue;
+        // Previously visited tabs (e.g. the editorial) stay mounted but
+        // hidden and match the same icon selectors, so only accept buttons
+        // the user can actually see.
+        if (!upButton || !upButton.checkVisibility()) continue;
         const downIcon = upButton.parentElement.querySelector(pageType.downIcon);
         const downButton = downIcon && downIcon.closest('button');
         if (downButton && downButton !== upButton) {
