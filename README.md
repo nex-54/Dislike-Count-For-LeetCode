@@ -11,11 +11,13 @@ A Chrome extension that restores the hidden dislike count on LeetCode.
 The extension fetches dislike counts from LeetCode's own public GraphQL API using the problem slug from the URL, and injects the count into the dislike button.
 Supported pages: problem, editorial, solution
 
-## Install from Chrome Web Store
+## Install
+
+### Chrome Web Store
 
 https://chromewebstore.google.com/detail/dislike-count-for-leetcod/gjbiemmdpdncpbjmgemebpddnikiiomn
 
-## Install from the repo
+### Repo
 
 1. Clone or download this repository:
    ```sh
@@ -31,13 +33,23 @@ After editing `content.js`, reload the extension on `chrome://extensions` (click
 
 ### Releasing
 
-1. Update the `version` field in `manifest.json` and commit.
-2. Tag the release so the published package can be traced back to the exact source:
-   ```sh
-   git tag -a v<version> -m "Release <version>"
-   git push origin v<version>
-   ```
-3. Run `./build.sh` and upload `dislike-count-for-leetcode-<version>.zip` to the Chrome Web Store.
+The `version` field in `manifest.json` is the single source of truth. Bumping it drives
+everything else.
+
+1. Update the `version` field in `manifest.json` and push the change to `main`.
+2. The `release` workflow runs the smoke test, then — only if it passes — reads the new
+   version, builds `dislike-count-for-leetcode-<version>.zip` via `./build.sh`, and creates
+   the `v<version>` tag and a GitHub release with that zip attached.
+3. Download the zip from the release and upload it to the Chrome Web Store.
+
+The workflow only runs when the version in `manifest.json` changes and skips versions that already have a
+tag.
+
+### Local builds
+
+```sh
+./build.sh
+```
 
 ### Smoke test
 

@@ -1,0 +1,42 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+    paths: ['manifest.json']
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  test:
+    uses: ./.github/workflows/smoke-run.yml
+
+  release:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - name: Read version
+        id: v
+        run: echo "version=$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' manifest.json)" >> "$GITHUB_OUTPUT"
+      - name: Skip if tag exists
+        id: check
+        run: |
+          if git ls-remote --exit-code --tags origin "refs/tags/v${{ steps.v.outputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Build zip
+        if: steps.check.outputs.exists != 'true'
+        run: ./build.sh
+      - name: Create release with zip
+        if: steps.check.outputs.exists != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "v${{ steps.v.outputs.version }}" \
+            dislike-count-for-leetcode-*.zip \
+            --title "v${{ steps.v.outputs.version }}" --generate-notes
