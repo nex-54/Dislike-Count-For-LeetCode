@@ -11,6 +11,10 @@ A Chrome extension that restores the hidden dislike count on LeetCode.
 The extension fetches dislike counts from LeetCode's own public GraphQL API using the problem slug from the URL, and injects the count into the dislike button.
 Supported pages: problem, editorial, solution
 
+## Install from Chrome Web Store
+
+https://chromewebstore.google.com/detail/dislike-count-for-leetcod/gjbiemmdpdncpbjmgemebpddnikiiomn
+
 ## Install from the repo
 
 1. Clone or download this repository:
