@@ -44,10 +44,7 @@ After editing `content.js`, reload the extension on `chrome://extensions` (click
 A Playwright smoke test loads the extension and checks that dislike counts appear on live leetcode.com pages.
 
 ```sh
-cd test
-npm install
-npx playwright install chromium
-npm test
+./test.sh
 ```
 
 ## Screenshots
