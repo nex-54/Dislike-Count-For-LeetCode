@@ -3,7 +3,7 @@
     "name": "Dislike Count for LeetCode",
     "description": "Restores the hidden dislike count on LeetCode.",
     "homepage_url": "https://github.com/nex-54/Dislike-Count-For-LeetCode",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "icons": {
         "16": "icons/16.png",
         "48": "icons/48.png",
