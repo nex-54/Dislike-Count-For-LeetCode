@@ -4,7 +4,7 @@ A Chrome extension that restores the hidden dislike count on LeetCode.
 
 *This extension is not affiliated with, endorsed by, or connected to LeetCode.*
 
-![Dislike count shown on a LeetCode problem page](screenshots/Screenshot.png)
+![Dislike count shown on a LeetCode problem page](screenshots/screenshot.png)
 
 ## How it works
 
@@ -61,14 +61,14 @@ A Playwright smoke test loads the extension and checks that dislike counts appea
 
 ## Screenshots
 
-### Problem page
+### Description
 
-![Dislike count on a problem page](screenshots/Screenshot%20-%20problem.png)
+![Dislike count on a problem's Description tab](screenshots/screenshot-1-description.png)
 
-### Editorial page
+### Editorial
 
-![Dislike count on an editorial page](screenshots/Screenshot%20-%20editorial.png)
+![Dislike count on a problem's Editorial tab](screenshots/screenshot-2-editorial.png)
 
-### Solution post
+### Solutions
 
-![Dislike count on a community solution post](screenshots/Screenshot%20-%20solution.png)
+![Dislike count on a community solution post](screenshots/screenshot-3-solutions.png)
