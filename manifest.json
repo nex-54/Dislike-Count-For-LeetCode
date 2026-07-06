@@ -3,7 +3,15 @@
     "name": "Dislike Count for LeetCode",
     "description": "Restores the hidden dislike count on LeetCode.",
     "homepage_url": "https://github.com/nex-54/Dislike-Count-For-LeetCode",
-    "version": "1.1.1",
+    "version": "1.1.2",
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "dislike-count-for-leetcode@nex-54.github.io",
+            "data_collection_permissions": {
+                "required": ["none"]
+            }
+        }
+    },
     "icons": {
         "16": "icons/16.png",
         "48": "icons/48.png",
