@@ -191,12 +191,24 @@ function syncButtonStyle(upButton, downButton) {
 
 let currentPage = null;
 let currentCounts = null;
+let cachedButtons = null; // { pageKey, upButton, downButton }
 function applyCounts() {
     if (!currentCounts || !currentPage) {
         return;
     }
     const pageType = PAGE_TYPES[currentPage.type];
-    const buttons = findVoteButtons(pageType);
+    // Avoid a full DOM scan on every mutation (e.g. every keystroke in the
+    // code editor) when the buttons we already found are still valid.
+    let buttons = cachedButtons && cachedButtons.pageKey === currentPage.key ? cachedButtons : null;
+    if (buttons && (!buttons.upButton.isConnected || !buttons.upButton.checkVisibility())) {
+        buttons = null;
+    }
+    if (!buttons) {
+        buttons = findVoteButtons(pageType);
+        if (buttons) {
+            cachedButtons = { pageKey: currentPage.key, ...buttons };
+        }
+    }
     if (!buttons) {
         return;
     }
