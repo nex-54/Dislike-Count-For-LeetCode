@@ -51,9 +51,12 @@ tag.
 ./build.sh
 ```
 
-### Smoke test
+### Tests
 
-A Playwright smoke test loads the extension and checks that dislike counts appear on live leetcode.com pages.
+Playwright tests load the extension against live leetcode.com pages: a smoke test that each page type
+(problem, editorial, solution) shows a dislike count on its own, and an integration test that navigates
+between them by clicking the Editorial/Solutions tabs and a solution post, verifying the count updates
+correctly across in-app (SPA) navigation without a page reload.
 
 ```sh
 ./test.sh

@@ -3,7 +3,9 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "test": "node smoke.js"
+        "test": "node smoke.js && node integration.js",
+        "test:smoke": "node smoke.js",
+        "test:integration": "node integration.js"
     },
     "devDependencies": {
         "playwright": "^1.53.0"
