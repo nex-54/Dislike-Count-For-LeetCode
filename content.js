@@ -126,9 +126,6 @@ function fetchSolutionCounts(topicId) {
 function findVoteButtons(pageType) {
     for (const icon of document.querySelectorAll(pageType.upIcon)) {
         const upButton = icon.closest('button');
-        // Previously visited tabs (e.g. the editorial) stay mounted but
-        // hidden and match the same icon selectors, so only accept buttons
-        // the user can actually see.
         if (!upButton || !upButton.checkVisibility()) continue;
         const downIcon = upButton.parentElement.querySelector(pageType.downIcon);
         const downButton = downIcon && downIcon.closest('button');
@@ -239,6 +236,205 @@ async function refreshCounts(page, attempt = 0) {
     applyCounts();
 }
 
+let commentCountsEnabled = false;
+function setCommentCountsEnabled(enabled) {
+    if (enabled === commentCountsEnabled) {
+        return;
+    }
+    commentCountsEnabled = enabled;
+    if (enabled) {
+        queueUpdate();
+    } else {
+        for (const countElement of document.querySelectorAll('[data-lcd-comment] [data-lcd-count]')) {
+            countElement.remove();
+        }
+    }
+}
+
+chrome.storage.sync.get({ commentCounts: false })
+    .then(({ commentCounts }) => setCommentCountsEnabled(Boolean(commentCounts)));
+chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'sync' && changes.commentCounts) {
+        setCommentCountsEnabled(Boolean(changes.commentCounts.newValue));
+    }
+});
+
+const COMMENT_QUERIES = {
+    questionDiscussComments: {
+        query: `
+            query questionDiscussComments($topicId: Int!, $orderBy: String, $pageNo: Int, $numPerPage: Int) {
+                topicComments(topicId: $topicId, orderBy: $orderBy, pageNo: $pageNo, numPerPage: $numPerPage) {
+                    data {
+                        id
+                        post {
+                            voteCount
+                            voteUpCount
+                        }
+                    }
+                }
+            }
+        `,
+        extract: (data) => data.topicComments && data.topicComments.data
+    },
+    commentReplies: {
+        query: `
+            query commentReplies($commentId: ID!, $skip: Int, $first: Int) {
+                commentReplyConnection(commentId: $commentId, skip: $skip, first: $first) {
+                    edges {
+                        node {
+                            id
+                            post {
+                                voteCount
+                                voteUpCount
+                            }
+                        }
+                    }
+                }
+            }
+        `,
+        extract: (data) => data.commentReplyConnection && data.commentReplyConnection.edges
+            && data.commentReplyConnection.edges.map((edge) => edge.node)
+    }
+};
+
+const commentCountsByQuery = new Map();
+const commentFetchAttempts = new Map();
+
+function fetchCommentDislikes(queryKeyJson) {
+    let promise = commentCountsByQuery.get(queryKeyJson);
+    if (promise) {
+        return promise;
+    }
+    promise = (async () => {
+        const [operationName, variables] = JSON.parse(queryKeyJson);
+        const spec = COMMENT_QUERIES[operationName];
+        if (!spec) {
+            return null;
+        }
+        const data = await fetchGraphql({ query: spec.query, variables, operationName });
+        const comments = data && spec.extract(data);
+        if (!comments) {
+            return null;
+        }
+        const counts = new Map();
+        for (const comment of comments) {
+            const post = comment && comment.post;
+            if (post && typeof post.voteUpCount === 'number' && typeof post.voteCount === 'number') {
+                counts.set(Number(comment.id), post.voteUpCount - post.voteCount);
+            }
+        }
+        return counts;
+    })();
+    commentCountsByQuery.set(queryKeyJson, promise);
+    promise.then((counts) => {
+        if (counts) {
+            commentFetchAttempts.delete(queryKeyJson);
+            return;
+        }
+        const attempt = commentFetchAttempts.get(queryKeyJson) || 0;
+        if (attempt >= FETCH_RETRY_MS.length) {
+            return;
+        }
+        commentFetchAttempts.set(queryKeyJson, attempt + 1);
+        setTimeout(() => {
+            if (commentCountsByQuery.get(queryKeyJson) === promise) {
+                commentCountsByQuery.delete(queryKeyJson);
+                queueUpdate();
+            }
+        }, FETCH_RETRY_MS[attempt]);
+    });
+    return promise;
+}
+
+function findRowChildContaining(row, icon) {
+    let child = icon;
+    while (child && child.parentElement !== row) {
+        child = child.parentElement;
+    }
+    return child;
+}
+
+function setCommentDislikeCount(row, dislikes) {
+    const downIcon = row.querySelector('svg.fa-down');
+    const upIcon = row.querySelector('svg.fa-up');
+    if (!downIcon || !upIcon) {
+        return;
+    }
+    const downGroup = findRowChildContaining(row, downIcon);
+    const upGroup = findRowChildContaining(row, upIcon);
+    if (!downGroup || !upGroup || downGroup === upGroup) {
+        return;
+    }
+    let countElement = downGroup.querySelector('[data-lcd-count]');
+    if (!countElement) {
+        let template = null;
+        for (const child of upGroup.children) {
+            if (!child.matches('svg.fa-up') && !child.querySelector('svg.fa-up')) {
+                template = child;
+                break;
+            }
+        }
+        countElement = template ? template.cloneNode(false) : document.createElement('div');
+        countElement.setAttribute('data-lcd-count', '');
+        downGroup.appendChild(countElement);
+    }
+    const text = formatCount(dislikes);
+    if (countElement.textContent !== text) {
+        countElement.textContent = text;
+    }
+}
+
+async function decorateCommentRow(row) {
+    const infoJson = row.getAttribute('data-lcd-comment');
+    let info;
+    try {
+        info = JSON.parse(infoJson);
+    } catch (err) {
+        return;
+    }
+    watchCommentVotes(row);
+    const counts = await fetchCommentDislikes(JSON.stringify(info.queryKey));
+    if (!commentCountsEnabled || !counts || !row.isConnected
+        || row.getAttribute('data-lcd-comment') !== infoJson) {
+        return;
+    }
+    const dislikes = counts.get(Number(info.id));
+    if (typeof dislikes === 'number') {
+        setCommentDislikeCount(row, dislikes);
+    }
+}
+
+function applyCommentCounts() {
+    for (const row of document.querySelectorAll('[data-lcd-comment]')) {
+        if (row.checkVisibility()) {
+            decorateCommentRow(row);
+        }
+    }
+}
+
+const watchedCommentRows = new WeakSet();
+function watchCommentVotes(row) {
+    if (watchedCommentRows.has(row)) {
+        return;
+    }
+    watchedCommentRows.add(row);
+    row.addEventListener('click', () => {
+        const infoJson = row.getAttribute('data-lcd-comment');
+        setTimeout(() => {
+            let info;
+            try {
+                info = JSON.parse(infoJson);
+            } catch (err) {
+                return;
+            }
+            const queryKeyJson = JSON.stringify(info.queryKey);
+            commentCountsByQuery.delete(queryKeyJson);
+            commentFetchAttempts.delete(queryKeyJson);
+            queueUpdate();
+        }, VOTE_SETTLE_MS);
+    });
+}
+
 const VOTE_SETTLE_MS = 1500;
 const watchedButtons = new WeakSet();
 let voteRefetchTimer = null;
@@ -268,6 +464,10 @@ async function update() {
     const page = getPage();
     if (!page) {
         return;
+    }
+    if (commentCountsEnabled) {
+        window.dispatchEvent(new CustomEvent('lcd:tag'));
+        applyCommentCounts();
     }
     if (!currentPage || page.key !== currentPage.key) {
         currentPage = page;

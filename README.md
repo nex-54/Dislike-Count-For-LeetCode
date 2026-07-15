@@ -11,6 +11,16 @@ A Chrome extension that restores the hidden dislike count on LeetCode.
 The extension fetches dislike counts from LeetCode's own public GraphQL API using the problem slug from the URL, and injects the count into the dislike button.
 Supported pages: problem, editorial, solution
 
+Comments (and their replies) on those pages can get dislike counts too: a small script in the page's
+world reads each comment's identity from the rendered page and tags its vote row, then the
+extension refetches the same comment query from the GraphQL API — which still returns both the
+upvote count and the net score — and shows the difference next to the downvote arrow.
+
+Because this relies on LeetCode page internals, it is **off by default**: enable "Show dislike
+counts on comments" in the extension's toolbar popup. While disabled, the page-world script
+stays completely dormant — it only ever acts when the extension asks it to, which never happens
+with the feature off. Toggling takes effect immediately, even on already-open LeetCode pages.
+
 ## Install
 
 ### Chrome Web Store
@@ -29,7 +39,7 @@ https://chromewebstore.google.com/detail/dislike-count-for-leetcod/gjbiemmdpdncp
 
 ## Development
 
-After editing `content.js`, reload the extension on `chrome://extensions` (click the reload icon), then refresh the LeetCode page to see the change.
+After editing scripts, reload the extension on `chrome://extensions` (click the reload icon), then refresh the LeetCode page to see the change.
 
 ### Releasing
 
@@ -54,9 +64,11 @@ tag.
 ### Tests
 
 Playwright tests load the extension against live leetcode.com pages: a smoke test that each page type
-(problem, editorial, solution) shows a dislike count on its own, and an integration test that navigates
+(problem, editorial, solution) shows a dislike count on its own, an integration test that navigates
 between them by clicking the Editorial/Solutions tabs and a solution post, verifying the count updates
-correctly across in-app (SPA) navigation without a page reload.
+correctly across in-app (SPA) navigation without a page reload, and a comments test that enables the
+opt-in comment counts through the popup and checks that editorial comments show them. CI (and the
+release gate) runs only the smoke test; the integration and comments tests run locally via `./test.sh`.
 
 ```sh
 ./test.sh
