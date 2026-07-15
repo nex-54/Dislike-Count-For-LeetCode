@@ -16,8 +16,13 @@ world reads each comment's identity from the rendered page and tags its vote row
 extension refetches the same comment query from the GraphQL API — which still returns both the
 upvote count and the net score — and shows the difference next to the downvote arrow.
 
-Because this relies on LeetCode page internals, it is **off by default**: enable "Show dislike
-counts on comments" in the extension's toolbar popup. While disabled, the page-world script
+The solutions list can also show each solution's dislike count next to its upvote count: the
+extension reads each card's topic id from its link and fetches the reaction counts for all
+visible cards in a single batched GraphQL request.
+
+Because these features rely on LeetCode page internals, they are **off by default**: enable
+"Show dislike counts on comments" and/or "Show dislike counts in the solutions list" in the
+extension's toolbar popup. While the comment feature is disabled, the page-world script
 stays completely dormant — it only ever acts when the extension asks it to, which never happens
 with the feature off. Toggling takes effect immediately, even on already-open LeetCode pages.
 
@@ -66,9 +71,10 @@ tag.
 Playwright tests load the extension against live leetcode.com pages: a smoke test that each page type
 (problem, editorial, solution) shows a dislike count on its own, an integration test that navigates
 between them by clicking the Editorial/Solutions tabs and a solution post, verifying the count updates
-correctly across in-app (SPA) navigation without a page reload, and a comments test that enables the
-opt-in comment counts through the popup and checks that editorial comments show them. CI (and the
-release gate) runs only the smoke test; the integration and comments tests run locally via `./test.sh`.
+correctly across in-app (SPA) navigation without a page reload, and comments and solutions tests that
+enable the respective opt-in counts through the popup and check that editorial comments and solutions
+list cards show them. CI (and the release gate) runs only the smoke test; the other tests run locally
+via `./test.sh`.
 
 ```sh
 ./test.sh

@@ -16,18 +16,25 @@
             gap: 8px;
             cursor: pointer;
         }
+        label + label {
+            margin-top: 8px;
+        }
         .hint {
-            margin: 6px 0 0 24px;
+            margin: 0 0 10px;
             color: #666;
         }
     </style>
 </head>
 <body>
+    <p class="hint">Experimental: these rely on LeetCode page internals and may stop working if the site changes.</p>
     <label>
         <input type="checkbox" id="comment-counts">
         <span>Show dislike counts on comments</span>
     </label>
-    <p class="hint">Experimental: relies on LeetCode page internals and may stop working if the site changes.</p>
+    <label>
+        <input type="checkbox" id="solution-list-counts">
+        <span>Show dislike counts in the solutions list</span>
+    </label>
     <script src="popup.js"></script>
 </body>
 </html>

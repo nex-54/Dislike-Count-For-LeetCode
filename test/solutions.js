@@ -20,16 +20,16 @@ const COUNT_TIMEOUT_MS = 30000;
 const MAX_ATTEMPTS = 3;
 const RETRY_DELAY_MS = 10000;
 
-const EDITORIAL_URL = 'https://leetcode.com/problems/two-sum/editorial/';
+const SOLUTIONS_LIST_URL = 'https://leetcode.com/problems/two-sum/solutions/';
 
-// Comment counts are off by default; turn them on through the popup, the
-// same way a user would.
-async function enableCommentCounts(context) {
+// Solution list counts are off by default; turn them on through the popup,
+// the same way a user would.
+async function enableSolutionListCounts(context) {
     const page = await context.newPage();
     try {
         await page.goto(`chrome-extension://${EXTENSION_ID}/popup.html`);
         await page.waitForTimeout(300);
-        const checkbox = page.locator('#comment-counts');
+        const checkbox = page.locator('#solution-list-counts');
         if (!(await checkbox.isChecked())) {
             await checkbox.check();
             await page.waitForTimeout(300);
@@ -39,39 +39,12 @@ async function enableCommentCounts(context) {
     }
 }
 
-// Comments only load once the article pane is scrolled to the bottom.
-async function waitForCommentCount(page) {
-    const deadline = Date.now() + COUNT_TIMEOUT_MS;
-    while (Date.now() < deadline) {
-        const text = await page.evaluate(() => {
-            for (const el of document.querySelectorAll('div')) {
-                if (el.scrollHeight > el.clientHeight + 100 && el.clientHeight > 300) {
-                    el.scrollTop = el.scrollHeight;
-                }
-            }
-            for (const row of document.querySelectorAll('[data-lcd-comment]')) {
-                const count = row.querySelector('[data-lcd-count]');
-                if (row.checkVisibility() && count) {
-                    return count.textContent;
-                }
-            }
-            return null;
-        });
-        if (text !== null) {
-            return text;
-        }
-        await new Promise((r) => setTimeout(r, 1000));
-    }
-    throw new Error(`no comment dislike count appeared within ${COUNT_TIMEOUT_MS}ms`);
-}
-
 async function runFlow(context) {
-    await enableCommentCounts(context);
+    await enableSolutionListCounts(context);
     const page = await context.newPage();
     try {
-        await page.goto(EDITORIAL_URL, { waitUntil: 'domcontentloaded' });
-        // The article count doubles as a readiness (and Cloudflare) check.
-        const count = page.locator('[data-lcd-count]').first();
+        await page.goto(SOLUTIONS_LIST_URL, { waitUntil: 'domcontentloaded' });
+        const count = page.locator('[data-lcd-solution]').first();
         try {
             await count.waitFor({ state: 'attached', timeout: COUNT_TIMEOUT_MS });
         } catch (err) {
@@ -79,20 +52,21 @@ async function runFlow(context) {
             if (/just a moment/i.test(title)) {
                 throw new Error(`blocked by Cloudflare challenge (page title: ${JSON.stringify(title)})`);
             }
-            throw new Error(`no [data-lcd-count] element appeared within ${COUNT_TIMEOUT_MS}ms`);
+            throw new Error(`no [data-lcd-solution] element appeared within ${COUNT_TIMEOUT_MS}ms`);
         }
-        const text = (await waitForCommentCount(page)).trim();
+        const text = (await count.textContent()).trim();
         if (!COUNT_RE.test(text)) {
-            throw new Error(`injected comment count has unexpected text: ${JSON.stringify(text)}`);
+            throw new Error(`injected solution list count has unexpected text: ${JSON.stringify(text)}`);
         }
-        console.log(`ok - editorial comments: dislike count "${text}"`);
+        const decorated = await page.locator('[data-lcd-solution]').count();
+        console.log(`ok - solutions list: first dislike count "${text}", ${decorated} cards decorated`);
     } finally {
         await page.close();
     }
 }
 
 async function main() {
-    const userDataDir = mkdtempSync(join(tmpdir(), 'lcd-comments-'));
+    const userDataDir = mkdtempSync(join(tmpdir(), 'lcd-solutions-'));
     const context = await chromium.launchPersistentContext(userDataDir, {
         headless: false,
         args: [
@@ -123,7 +97,7 @@ async function main() {
         await context.close();
         rmSync(userDataDir, { recursive: true, force: true });
     }
-    console.log('comments test passed');
+    console.log('solutions test passed');
 }
 
 main().catch((err) => {
