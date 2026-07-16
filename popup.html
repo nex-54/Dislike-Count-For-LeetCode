@@ -8,25 +8,35 @@
             font-size: 13px;
             margin: 0;
             padding: 12px;
+            width: min-content;
             min-width: 260px;
         }
         label {
             display: flex;
-            align-items: baseline;
+            align-items: center;
             gap: 8px;
             cursor: pointer;
+            white-space: nowrap;
         }
         label + label {
             margin-top: 8px;
         }
         .hint {
-            margin: 0 0 10px;
+            margin: 0;
             color: #666;
+        }
+        .hint + .hint {
+            margin-top: 4px;
+        }
+        .hint + label {
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
     <p class="hint">Experimental: these rely on LeetCode page internals and may stop working if the site changes.</p>
+    <p class="hint">They also send extra GraphQL requests, which may run into LeetCode's rate limits.</p>
+    <p class="hint">If LeetCode starts rate-limiting you, switch these options off.</p>
     <label>
         <input type="checkbox" id="comment-counts">
         <span>Show dislike counts on comments</span>
