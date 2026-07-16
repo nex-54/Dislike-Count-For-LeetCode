@@ -50,9 +50,9 @@ async function runFlow(context) {
         } catch (err) {
             const title = await page.title();
             if (/just a moment/i.test(title)) {
-                throw new Error(`blocked by Cloudflare challenge (page title: ${JSON.stringify(title)})`);
+                throw new Error(`blocked by Cloudflare challenge (page title: ${JSON.stringify(title)})`, { cause: err });
             }
-            throw new Error(`no [data-lcd-solution] element appeared within ${COUNT_TIMEOUT_MS}ms`);
+            throw new Error(`no [data-lcd-solution] element appeared within ${COUNT_TIMEOUT_MS}ms`, { cause: err });
         }
         const text = (await count.textContent()).trim();
         if (!COUNT_RE.test(text)) {

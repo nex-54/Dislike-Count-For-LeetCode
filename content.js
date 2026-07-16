@@ -17,12 +17,12 @@ const PAGE_TYPES = {
 };
 
 function getPage() {
-    const solutionMatches = window.location.pathname.match(/^\/problems\/([a-z0-9\-]+)\/solutions\/(\d+)(?:\/|$)/);
+    const solutionMatches = window.location.pathname.match(/^\/problems\/([a-z0-9-]+)\/solutions\/(\d+)(?:\/|$)/);
     if (solutionMatches) {
         const [, slug, topicId] = solutionMatches;
         return { slug, type: 'solution', topicId, key: `${slug}/solutions/${topicId}` };
     }
-    const matches = window.location.pathname.match(/^\/problems\/([a-z0-9\-]+)(\/editorial)?(?:\/|$)/);
+    const matches = window.location.pathname.match(/^\/problems\/([a-z0-9-]+)(\/editorial)?(?:\/|$)/);
     if (!matches) {
         return null;
     }
@@ -413,7 +413,7 @@ async function decorateCommentRow(row) {
     let info;
     try {
         info = JSON.parse(infoJson);
-    } catch (err) {
+    } catch {
         return;
     }
     watchCommentVotes(row);
@@ -448,7 +448,7 @@ function watchCommentVotes(row) {
             let info;
             try {
                 info = JSON.parse(infoJson);
-            } catch (err) {
+            } catch {
                 return;
             }
             const queryKeyJson = JSON.stringify(info.queryKey);
@@ -459,9 +459,9 @@ function watchCommentVotes(row) {
     });
 }
 
-const SOLUTION_LIST_PATH = /^\/problems\/[a-z0-9\-]+\/solutions\/?$/;
+const SOLUTION_LIST_PATH = /^\/problems\/[a-z0-9-]+\/solutions\/?$/;
 const INACTIVE_UP_PATH = 'M192 82.4L334.7 232.3c.8 .8 1.3 2 1.3 3.2c0 2.5-2 4.6-4.6 4.6H248c-13.3 0-24 10.7-24 24V432H160V264c0-13.3-10.7-24-24-24H52.6c-2.5 0-4.6-2-4.6-4.6c0-1.2 .5-2.3 1.3-3.2L192 82.4zm192 153c0-13.5-5.2-26.5-14.5-36.3L222.9 45.2C214.8 36.8 203.7 32 192 32s-22.8 4.8-30.9 13.2L14.5 199.2C5.2 208.9 0 221.9 0 235.4c0 29 23.5 52.6 52.6 52.6H112V432c0 26.5 21.5 48 48 48h64c26.5 0 48-21.5 48-48V288h59.4c29 0 52.6-23.5 52.6-52.6z';
-const SOLUTION_CARD_HREF = /^\/problems\/[a-z0-9\-]+\/solutions\/(\d+)(?:\/|$)/;
+const SOLUTION_CARD_HREF = /^\/problems\/[a-z0-9-]+\/solutions\/(\d+)(?:\/|$)/;
 const MAX_CARD_HOPS = 8;
 
 const solutionDislikesByTopic = new Map();

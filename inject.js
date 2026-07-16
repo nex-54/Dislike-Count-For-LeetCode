@@ -45,7 +45,7 @@
             let value;
             try {
                 value = JSON.stringify(info);
-            } catch (err) {
+            } catch {
                 continue;
             }
             if (row.getAttribute('data-lcd-comment') !== value) {
