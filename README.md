@@ -1,6 +1,6 @@
 # Dislike Count For LeetCode
 
-A Chrome extension that restores the hidden dislike count on LeetCode.
+A browser extension for Chrome, Firefox, and Edge that restores the hidden dislike count on LeetCode.
 
 *This extension is not affiliated with, endorsed by, or connected to LeetCode.*
 
@@ -32,15 +32,26 @@ with the feature off. Toggling takes effect immediately, even on already-open Le
 
 https://chromewebstore.google.com/detail/dislike-count-for-leetcod/gjbiemmdpdncpbjmgemebpddnikiiomn
 
+### Firefox Add-ons
+
+https://addons.mozilla.org/en-US/firefox/addon/dislike-count-for-leetcode/
+
+### Edge Add-ons
+
+https://microsoftedge.microsoft.com/addons/detail/dislike-count-for-leetcod/fofjkcfafaiimgdfpfjbkeifenlmaefn
+
 ### Repo
 
 1. Clone or download this repository:
    ```sh
    git clone https://github.com/nex-54/Dislike-Count-For-LeetCode.git
    ```
-2. Open `chrome://extensions` in Chrome (or any Chromium-based browser).
+2. Open `chrome://extensions` in Chrome (or `edge://extensions` in Edge).
 3. Enable **Developer mode** (toggle in the top-right corner).
 4. Click **Load unpacked** and select the repository folder.
+
+In Firefox, open `about:debugging#/runtime/this-firefox`, click **Load Temporary Add-on**, and
+select the repository's `manifest.json` (temporary add-ons are removed when Firefox restarts).
 
 ## Development
 
@@ -55,7 +66,8 @@ everything else.
 2. The `release` workflow runs the smoke test, then — only if it passes — reads the new
    version, builds `dislike-count-for-leetcode-<version>.zip` via `./build.sh`, and creates
    the `v<version>` tag and a GitHub release with that zip attached.
-3. Download the zip from the release and upload it to the Chrome Web Store.
+3. Download the zip from the release and upload it to the Chrome Web Store, Firefox Add-ons
+   (AMO), and Edge Add-ons.
 
 The workflow only runs when the version in `manifest.json` changes and skips versions that already have a
 tag.
