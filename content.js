@@ -215,21 +215,21 @@ function applyCounts() {
 }
 
 const FETCH_RETRY_MS = [1000, 5000, 15000, 30000];
-async function refreshCounts(page, attempt = 0) {
+let refreshToken = 0;
+async function refreshCounts(page, attempt = 0, token = ++refreshToken) {
     const counts = await PAGE_TYPES[page.type].fetchCounts(page);
-    if (!currentPage || currentPage.key !== page.key) {
+    if (token !== refreshToken || !currentPage || currentPage.key !== page.key) {
         return;
     }
     if (!counts) {
         if (attempt >= FETCH_RETRY_MS.length) {
             return;
         }
-        const delay = FETCH_RETRY_MS[attempt];
         setTimeout(() => {
-            if (currentPage && currentPage.key === page.key && !currentCounts) {
-                refreshCounts(page, attempt + 1);
+            if (token === refreshToken) {
+                refreshCounts(page, attempt + 1, token);
             }
-        }, delay);
+        }, FETCH_RETRY_MS[attempt]);
         return;
     }
     currentCounts = counts;
