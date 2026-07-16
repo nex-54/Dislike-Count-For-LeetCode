@@ -660,6 +660,15 @@ async function update() {
     if (!page) {
         return;
     }
+    const pageChanged = !currentPage || page.key !== currentPage.key;
+    if (pageChanged) {
+        currentPage = page;
+        currentCounts = null;
+        commentCountsByQuery.clear();
+        commentFetchAttempts.clear();
+        solutionDislikesByTopic.clear();
+        solutionFetchAttempts.clear();
+    }
     if (commentCountsEnabled) {
         window.dispatchEvent(new CustomEvent('lcd:tag'));
         applyCommentCounts();
@@ -667,9 +676,7 @@ async function update() {
     if (solutionListCountsEnabled && SOLUTION_LIST_PATH.test(window.location.pathname)) {
         applySolutionListCounts();
     }
-    if (!currentPage || page.key !== currentPage.key) {
-        currentPage = page;
-        currentCounts = null;
+    if (pageChanged) {
         await refreshCounts(page);
         return;
     }
