@@ -1,5 +1,6 @@
 (() => {
     const MAX_FIBER_HOPS = 25;
+    const MAX_ROW_HOPS = 8;
 
     function findCommentInfo(downIcon) {
         let fiber = null;
@@ -20,10 +21,12 @@
 
     function findVoteRow(downIcon) {
         let row = downIcon.parentElement;
-        while (row && !row.querySelector('svg.fa-up')) {
-            row = row.parentElement;
+        for (let hop = 0; row && hop < MAX_ROW_HOPS; hop++, row = row.parentElement) {
+            if (row.querySelector('svg.fa-up')) {
+                return row;
+            }
         }
-        return row;
+        return null;
     }
 
     function tagCommentRows() {
