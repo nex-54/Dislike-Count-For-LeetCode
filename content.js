@@ -436,13 +436,32 @@ function applyCommentCounts() {
     }
 }
 
+// Only clicks on the vote controls should trigger a refetch; the row also
+// holds non-vote controls like reply/share.
+function isCommentVoteClick(row, target) {
+    if (!(target instanceof Element)) {
+        return false;
+    }
+    for (const selector of ['svg.fa-up', 'svg.fa-down']) {
+        const icon = row.querySelector(selector);
+        const group = icon && findRowChildContaining(row, icon);
+        if (group && group.contains(target)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 const watchedCommentRows = new WeakSet();
 function watchCommentVotes(row) {
     if (watchedCommentRows.has(row)) {
         return;
     }
     watchedCommentRows.add(row);
-    row.addEventListener('click', () => {
+    row.addEventListener('click', (event) => {
+        if (!isCommentVoteClick(row, event.target)) {
+            return;
+        }
         const infoJson = row.getAttribute('data-lcd-comment');
         setTimeout(() => {
             let info;
