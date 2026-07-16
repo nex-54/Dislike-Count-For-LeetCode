@@ -270,6 +270,9 @@ chrome.storage.sync.get({ commentCounts: false, solutionListCounts: false })
     .then(({ commentCounts, solutionListCounts }) => {
         setCommentCountsEnabled(Boolean(commentCounts));
         setSolutionListCountsEnabled(Boolean(solutionListCounts));
+    })
+    .catch((err) => {
+        console.debug('[Dislike-Count-For-LeetCode] storage read failed:', err);
     });
 chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== 'sync') {
