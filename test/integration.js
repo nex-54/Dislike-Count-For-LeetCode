@@ -1,17 +1,9 @@
-import { mkdtempSync, rmSync } from 'fs';
-import { tmpdir } from 'os';
-import { resolve, join } from 'path';
-import { chromium } from 'playwright';
+import {
+    COUNT_TIMEOUT_MS,
+    checkCountText, retryFlow, withExtensionContext
+} from './helpers.js';
 
-const EXTENSION_DIR = resolve(import.meta.dirname, '..');
-const COUNT_RE = /^\d+(\.\d+)?[KM]?$/;
-const COUNT_TIMEOUT_MS = 30000;
 const NAV_TIMEOUT_MS = 15000;
-// Cloudflare sometimes challenges the first navigation (especially from CI
-// IPs) but sets a context-wide clearance cookie shortly after, so a failed
-// run usually passes on a later attempt (see smoke.js).
-const MAX_ATTEMPTS = 3;
-const RETRY_DELAY_MS = 10000;
 
 const PROBLEM_URL = 'https://leetcode.com/problems/two-sum/';
 const SOLUTION_HREF_FRAGMENT = '/problems/two-sum/solutions/3619262/';
@@ -20,9 +12,7 @@ async function waitForVisibleCount(page) {
     const locator = page.locator('[data-lcd-count]:visible').first();
     await locator.waitFor({ state: 'visible', timeout: COUNT_TIMEOUT_MS });
     const text = (await locator.textContent() || '').trim();
-    if (!COUNT_RE.test(text)) {
-        throw new Error(`injected count has unexpected text: ${JSON.stringify(text)}`);
-    }
+    checkCountText(text, 'injected count');
     return text;
 }
 
@@ -71,37 +61,8 @@ async function runFlow(context) {
 }
 
 async function main() {
-    const userDataDir = mkdtempSync(join(tmpdir(), 'lcd-integration-'));
-    const context = await chromium.launchPersistentContext(userDataDir, {
-        headless: false,
-        args: [
-            `--disable-extensions-except=${EXTENSION_DIR}`,
-            `--load-extension=${EXTENSION_DIR}`
-        ]
-    });
-    try {
-        let lastErr;
-        for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-            if (attempt > 1) {
-                console.log(`retrying full flow (attempt ${attempt}/${MAX_ATTEMPTS})...`);
-                await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
-            }
-            try {
-                await runFlow(context);
-                lastErr = null;
-                break;
-            } catch (err) {
-                lastErr = err;
-                console.error(`FAIL (attempt ${attempt}/${MAX_ATTEMPTS}): ${err.message}`);
-            }
-        }
-        if (lastErr) {
-            throw lastErr;
-        }
-    } finally {
-        await context.close();
-        rmSync(userDataDir, { recursive: true, force: true });
-    }
+    await withExtensionContext('lcd-integration-', (context) =>
+        retryFlow(() => runFlow(context), 'full flow'));
     console.log('integration test passed');
 }
 
