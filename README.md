@@ -9,7 +9,7 @@ A browser extension for Chrome, Firefox, and Edge that restores the hidden disli
 ## How it works
 
 The extension fetches dislike counts from LeetCode's own public GraphQL API using the problem slug from the URL, and injects the count into the dislike button.
-Supported pages: problem, editorial, solution
+Supported pages: problem, editorial, solution, discuss post
 
 Comments (and their replies) on those pages can get dislike counts too: a small script in the page's
 world reads each comment's identity from the rendered page and tags its vote row, then the
@@ -81,7 +81,7 @@ tag.
 ### Tests
 
 Playwright tests load the extension against live leetcode.com pages: a smoke test that each page type
-(problem, editorial, solution) shows a dislike count on its own, an integration test that navigates
+(problem, editorial, solution, discuss post) shows a dislike count on its own, an integration test that navigates
 between them by clicking the Editorial/Solutions tabs and a solution post, verifying the count updates
 correctly across in-app (SPA) navigation without a page reload, and comments and solutions tests that
 enable the respective opt-in counts through the popup and check that editorial comments and solutions

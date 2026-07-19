@@ -6,7 +6,8 @@ import {
 const TARGETS = [
     { name: 'problem page', url: 'https://leetcode.com/problems/two-sum/' },
     { name: 'editorial page', url: 'https://leetcode.com/problems/two-sum/editorial/' },
-    { name: 'solution post', url: 'https://leetcode.com/problems/two-sum/solutions/3619262/3-methods-c-java-python-beginner-friendl-x595/' }
+    { name: 'solution post', url: 'https://leetcode.com/problems/two-sum/solutions/3619262/3-methods-c-java-python-beginner-friendl-x595/' },
+    { name: 'discuss post', url: 'https://leetcode.com/discuss/post/2347639/a-comprehensive-guide-and-template-for-m-irii/' }
 ];
 
 async function checkTarget(context, { name, url }) {

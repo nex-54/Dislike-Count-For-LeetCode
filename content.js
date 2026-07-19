@@ -13,6 +13,11 @@ const PAGE_TYPES = {
         upIcon: 'svg.fa-up',
         downIcon: 'svg.fa-down',
         fetchCounts: (page) => fetchSolutionCounts(page.topicId)
+    },
+    discuss: {
+        upIcon: 'svg.fa-up',
+        downIcon: 'svg.fa-down',
+        fetchCounts: (page) => fetchDiscussCounts(page.topicId)
     }
 };
 
@@ -21,6 +26,11 @@ function getPage() {
     if (solutionMatches) {
         const [, slug, topicId] = solutionMatches;
         return { slug, type: 'solution', topicId, key: `${slug}/solutions/${topicId}` };
+    }
+    const discussMatches = window.location.pathname.match(/^\/discuss\/post\/(\d+)(?:\/|$)/);
+    if (discussMatches) {
+        const topicId = discussMatches[1];
+        return { type: 'discuss', topicId, key: `discuss/${topicId}` };
     }
     const matches = window.location.pathname.match(/^\/problems\/([a-z0-9-]+)(\/editorial)?(?:\/|$)/);
     if (!matches) {
@@ -106,11 +116,11 @@ function fetchEditorialCounts(slug) {
     }, 'ugcArticleOfficialSolutionArticle');
 }
 
-function fetchSolutionCounts(topicId) {
+function fetchTopicReactions(articleField, topicId) {
     return fetchReactionCounts({
         query: `
-            query solutionReactions($topicId: ID!) {
-                ugcArticleSolutionArticle(topicId: $topicId) {
+            query topicReactions($topicId: ID!) {
+                ${articleField}(topicId: $topicId) {
                     reactions {
                         count
                         reactionType
@@ -119,8 +129,16 @@ function fetchSolutionCounts(topicId) {
             }
         `,
         variables: { topicId },
-        operationName: 'solutionReactions'
-    }, 'ugcArticleSolutionArticle');
+        operationName: 'topicReactions'
+    }, articleField);
+}
+
+function fetchSolutionCounts(topicId) {
+    return fetchTopicReactions('ugcArticleSolutionArticle', topicId);
+}
+
+function fetchDiscussCounts(topicId) {
+    return fetchTopicReactions('ugcArticleDiscussionArticle', topicId);
 }
 
 function findVoteButtons(pageType) {
