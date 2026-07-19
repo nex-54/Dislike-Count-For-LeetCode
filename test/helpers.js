@@ -18,8 +18,8 @@ export const COUNT_TIMEOUT_MS = 30000;
 // Cloudflare sometimes challenges the first navigation (especially from CI
 // IPs) but sets a context-wide clearance cookie shortly after, so a failed
 // attempt usually passes on a later one.
-export const MAX_ATTEMPTS = 3;
-export const RETRY_DELAY_MS = 10000;
+export const MAX_ATTEMPTS = 4;
+export const RETRY_DELAY_MS = 60000;
 
 export function delay(ms) {
     return new Promise((r) => setTimeout(r, ms));
