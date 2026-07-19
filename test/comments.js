@@ -3,7 +3,10 @@ import {
     checkCountText, delay, enablePopupToggle, retryFlow, waitForAttachedCount, withExtensionContext
 } from './helpers.js';
 
-const EDITORIAL_URL = 'https://leetcode.com/problems/two-sum/editorial/';
+const TARGETS = [
+    { name: 'editorial comments', url: 'https://leetcode.com/problems/two-sum/editorial/' },
+    { name: 'discuss post comments', url: 'https://leetcode.com/discuss/post/2347639/a-comprehensive-guide-and-template-for-m-irii/' }
+];
 
 // Comments only load once the article pane is scrolled to the bottom.
 async function waitForCommentCount(page) {
@@ -33,16 +36,18 @@ async function waitForCommentCount(page) {
 
 async function runFlow(context) {
     await enablePopupToggle(context, 'comment-counts');
-    const page = await context.newPage();
-    try {
-        await page.goto(EDITORIAL_URL, { waitUntil: 'domcontentloaded' });
-        // The article count doubles as a readiness (and Cloudflare) check.
-        await waitForAttachedCount(page, '[data-lcd-count]');
-        const text = (await waitForCommentCount(page)).trim();
-        checkCountText(text, 'injected comment count');
-        console.log(`ok - editorial comments: dislike count "${text}"`);
-    } finally {
-        await page.close();
+    for (const { name, url } of TARGETS) {
+        const page = await context.newPage();
+        try {
+            await page.goto(url, { waitUntil: 'domcontentloaded' });
+            // The article count doubles as a readiness (and Cloudflare) check.
+            await waitForAttachedCount(page, '[data-lcd-count]');
+            const text = (await waitForCommentCount(page)).trim();
+            checkCountText(text, 'injected comment count');
+            console.log(`ok - ${name}: dislike count "${text}"`);
+        } finally {
+            await page.close();
+        }
     }
 }
 

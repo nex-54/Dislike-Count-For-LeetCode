@@ -84,8 +84,8 @@ Playwright tests load the extension against live leetcode.com pages: a smoke tes
 (problem, editorial, solution, discuss post) shows a dislike count on its own, an integration test that navigates
 between them by clicking the Editorial/Solutions tabs and a solution post, verifying the count updates
 correctly across in-app (SPA) navigation without a page reload, and comments and solutions tests that
-enable the respective opt-in counts through the popup and check that editorial comments and solutions
-list cards show them. CI (and the release gate) runs only the smoke test; the other tests run locally
+enable the respective opt-in counts through the popup and check that editorial and discuss post
+comments and solutions list cards show them. CI (and the release gate) runs only the smoke test; the other tests run locally
 via `./test.sh`.
 
 ```sh
