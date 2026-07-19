@@ -7,6 +7,8 @@ chrome.storage.sync.get({ commentCounts: false, solutionListCounts: false }).the
     for (const { checkbox, key } of TOGGLES) {
         checkbox.checked = values[key];
     }
+}).catch((err) => {
+    console.debug('[Dislike-Count-For-LeetCode] storage read failed:', err);
 });
 
 for (const { checkbox, key } of TOGGLES) {

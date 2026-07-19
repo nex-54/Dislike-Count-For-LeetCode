@@ -624,7 +624,7 @@ function setSolutionCardCount(card, dislikes) {
 }
 
 function applySolutionListCounts() {
-    const missing = [];
+    const missing = new Set();
     for (const anchor of document.querySelectorAll('a[href*="/solutions/"]')) {
         const match = (anchor.getAttribute('href') || '').match(SOLUTION_CARD_HREF);
         if (!match) {
@@ -636,8 +636,8 @@ function applySolutionListCounts() {
             continue;
         }
         if (!solutionDislikesByTopic.has(topicId)) {
-            if (!solutionTopicsInFlight.has(topicId) && !missing.includes(topicId)) {
-                missing.push(topicId);
+            if (!solutionTopicsInFlight.has(topicId)) {
+                missing.add(topicId);
             }
             continue;
         }
@@ -646,8 +646,8 @@ function applySolutionListCounts() {
             setSolutionCardCount(card, dislikes);
         }
     }
-    if (missing.length) {
-        fetchSolutionListDislikes(missing);
+    if (missing.size) {
+        fetchSolutionListDislikes([...missing]);
     }
 }
 

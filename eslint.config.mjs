@@ -18,7 +18,9 @@ export default [
         languageOptions: {
             globals: {
                 ...globals.node,
-                ...globals.browser
+                ...globals.browser,
+                // for code evaluated inside extension pages via Playwright
+                chrome: 'readonly'
             }
         }
     }

@@ -83,17 +83,21 @@ export function checkCountText(text, what) {
 }
 
 // Opt-in features are off by default; turn them on through the popup, the
-// same way a user would.
-export async function enablePopupToggle(context, checkboxId) {
+// same way a user would. The popup's change listener is attached synchronously
+// at script load, so clicking right after the page loads is safe; waiting on
+// the storage value itself confirms the write landed before the popup closes.
+export async function enablePopupToggle(context, checkboxId, storageKey) {
     const page = await context.newPage();
     try {
         await page.goto(`chrome-extension://${EXTENSION_ID}/popup.html`);
-        await page.waitForTimeout(300);
         const checkbox = page.locator(`#${checkboxId}`);
         if (!(await checkbox.isChecked())) {
             await checkbox.check();
-            await page.waitForTimeout(300);
         }
+        await page.waitForFunction(
+            (key) => chrome.storage.sync.get(key).then((values) => values[key] === true),
+            storageKey
+        );
     } finally {
         await page.close();
     }

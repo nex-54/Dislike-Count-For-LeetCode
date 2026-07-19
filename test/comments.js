@@ -35,7 +35,7 @@ async function waitForCommentCount(page) {
 }
 
 async function runFlow(context) {
-    await enablePopupToggle(context, 'comment-counts');
+    await enablePopupToggle(context, 'comment-counts', 'commentCounts');
     for (const { name, url } of TARGETS) {
         const page = await context.newPage();
         try {

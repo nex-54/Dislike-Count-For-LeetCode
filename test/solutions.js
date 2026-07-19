@@ -5,7 +5,7 @@ import {
 const SOLUTIONS_LIST_URL = 'https://leetcode.com/problems/two-sum/solutions/';
 
 async function runFlow(context) {
-    await enablePopupToggle(context, 'solution-list-counts');
+    await enablePopupToggle(context, 'solution-list-counts', 'solutionListCounts');
     const page = await context.newPage();
     try {
         await page.goto(SOLUTIONS_LIST_URL, { waitUntil: 'domcontentloaded' });
