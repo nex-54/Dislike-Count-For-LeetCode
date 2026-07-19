@@ -41,13 +41,35 @@ function getPage() {
     return { slug, type, key: type === 'editorial' ? `${slug}/editorial` : slug };
 }
 
+// LeetCode rate-limits per client, so one 429 means every request is being
+// throttled: remember the cooldown and send nothing until it has passed.
+const RATE_LIMIT_COOLDOWN_MS = 30000;
+const RATE_LIMIT_COOLDOWN_MAX_MS = 300000;
+let rateLimitedUntil = 0;
+
+function rateLimitRemainingMs() {
+    return Math.max(0, rateLimitedUntil - Date.now());
+}
+
 async function fetchGraphql(body) {
+    if (rateLimitRemainingMs() > 0) {
+        return null;
+    }
     try {
         const response = await fetch('https://leetcode.com/graphql/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body)
         });
+        if (response.status === 429) {
+            const retryAfterSec = Number(response.headers.get('Retry-After'));
+            const cooldownMs = retryAfterSec > 0
+                ? Math.min(retryAfterSec * 1000, RATE_LIMIT_COOLDOWN_MAX_MS)
+                : RATE_LIMIT_COOLDOWN_MS;
+            rateLimitedUntil = Math.max(rateLimitedUntil, Date.now() + cooldownMs);
+            console.debug('[Dislike-Count-For-LeetCode] rate limited, pausing requests for', cooldownMs, 'ms');
+            return null;
+        }
         if (!response.ok) {
             return null;
         }
@@ -233,6 +255,11 @@ function applyCounts() {
 }
 
 const FETCH_RETRY_MS = [1000, 5000, 15000, 30000];
+
+function retryDelayMs(attempt) {
+    return Math.max(FETCH_RETRY_MS[attempt], rateLimitRemainingMs());
+}
+
 let refreshToken = 0;
 async function refreshCounts(page, attempt = 0, token = ++refreshToken) {
     const counts = await PAGE_TYPES[page.type].fetchCounts(page);
@@ -247,7 +274,7 @@ async function refreshCounts(page, attempt = 0, token = ++refreshToken) {
             if (token === refreshToken) {
                 refreshCounts(page, attempt + 1, token);
             }
-        }, FETCH_RETRY_MS[attempt]);
+        }, retryDelayMs(attempt));
         return;
     }
     currentCounts = counts;
@@ -386,7 +413,7 @@ function fetchCommentDislikes(queryKeyJson) {
                 commentCountsByQuery.delete(queryKeyJson);
                 queueUpdate();
             }
-        }, FETCH_RETRY_MS[attempt]);
+        }, retryDelayMs(attempt));
     });
     return promise;
 }
@@ -550,7 +577,7 @@ async function fetchSolutionListDislikes(topicIds) {
             solutionTopicsInFlight.delete(topicId);
         }
         queueUpdate();
-    }, FETCH_RETRY_MS[Math.min(...retryable.map((r) => r.attempt))]);
+    }, retryDelayMs(Math.min(...retryable.map((r) => r.attempt))));
 }
 
 function findSolutionCard(anchor) {
