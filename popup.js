@@ -1,9 +1,8 @@
 const TOGGLES = [
-    { checkbox: document.getElementById('comment-counts'), key: 'commentCounts' },
-    { checkbox: document.getElementById('solution-list-counts'), key: 'solutionListCounts' }
+    { checkbox: document.getElementById('comment-counts'), key: 'commentCounts' }
 ];
 
-chrome.storage.sync.get({ commentCounts: false, solutionListCounts: false }).then((values) => {
+chrome.storage.sync.get({ commentCounts: false }).then((values) => {
     for (const { checkbox, key } of TOGGLES) {
         checkbox.checked = values[key];
     }

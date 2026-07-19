@@ -3,11 +3,10 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "test": "node smoke.js && node integration.js && node comments.js && node solutions.js",
+        "test": "node smoke.js && node integration.js && node comments.js",
         "test:smoke": "node smoke.js",
         "test:integration": "node integration.js",
-        "test:comments": "node comments.js",
-        "test:solutions": "node solutions.js"
+        "test:comments": "node comments.js"
     },
     "devDependencies": {
         "playwright": "^1.61.1"

@@ -296,25 +296,9 @@ function setCommentCountsEnabled(enabled) {
     }
 }
 
-let solutionListCountsEnabled = false;
-function setSolutionListCountsEnabled(enabled) {
-    if (enabled === solutionListCountsEnabled) {
-        return;
-    }
-    solutionListCountsEnabled = enabled;
-    if (enabled) {
-        queueUpdate();
-    } else {
-        for (const countElement of document.querySelectorAll('[data-lcd-solution]')) {
-            countElement.remove();
-        }
-    }
-}
-
-chrome.storage.sync.get({ commentCounts: false, solutionListCounts: false })
-    .then(({ commentCounts, solutionListCounts }) => {
+chrome.storage.sync.get({ commentCounts: false })
+    .then(({ commentCounts }) => {
         setCommentCountsEnabled(Boolean(commentCounts));
-        setSolutionListCountsEnabled(Boolean(solutionListCounts));
     })
     .catch((err) => {
         console.debug('[Dislike-Count-For-LeetCode] storage read failed:', err);
@@ -325,9 +309,6 @@ chrome.storage.onChanged.addListener((changes, area) => {
     }
     if (changes.commentCounts) {
         setCommentCountsEnabled(Boolean(changes.commentCounts.newValue));
-    }
-    if (changes.solutionListCounts) {
-        setSolutionListCountsEnabled(Boolean(changes.solutionListCounts.newValue));
     }
 });
 
@@ -526,158 +507,6 @@ function watchCommentVotes(row) {
     });
 }
 
-const SOLUTION_LIST_PATH = /^\/problems\/[a-z0-9-]+\/solutions\/?$/;
-const INACTIVE_UP_PATH = 'M192 82.4L334.7 232.3c.8 .8 1.3 2 1.3 3.2c0 2.5-2 4.6-4.6 4.6H248c-13.3 0-24 10.7-24 24V432H160V264c0-13.3-10.7-24-24-24H52.6c-2.5 0-4.6-2-4.6-4.6c0-1.2 .5-2.3 1.3-3.2L192 82.4zm192 153c0-13.5-5.2-26.5-14.5-36.3L222.9 45.2C214.8 36.8 203.7 32 192 32s-22.8 4.8-30.9 13.2L14.5 199.2C5.2 208.9 0 221.9 0 235.4c0 29 23.5 52.6 52.6 52.6H112V432c0 26.5 21.5 48 48 48h64c26.5 0 48-21.5 48-48V288h59.4c29 0 52.6-23.5 52.6-52.6z';
-const SOLUTION_CARD_HREF = /^\/problems\/[a-z0-9-]+\/solutions\/(\d+)(?:\/|$)/;
-const MAX_CARD_HOPS = 8;
-
-const solutionDislikesByTopic = new Map();
-const solutionTopicsInFlight = new Set();
-const solutionFetchAttempts = new Map();
-
-async function fetchSolutionListDislikes(topicIds) {
-    for (const topicId of topicIds) {
-        solutionTopicsInFlight.add(topicId);
-    }
-    // topicIds come from the \d+ href capture, so inlining them is safe.
-    const query = `query solutionListReactions { ${topicIds.map((topicId, i) =>
-        `t${i}: ugcArticleSolutionArticle(topicId: ${topicId}) { reactions { count reactionType } }`
-    ).join(' ')} }`;
-    const data = await fetchGraphql({ query, operationName: 'solutionListReactions' });
-    const failed = [];
-    topicIds.forEach((topicId, i) => {
-        const counts = reactionsToCounts(data && data[`t${i}`]);
-        if (counts) {
-            solutionDislikesByTopic.set(topicId, counts.dislikes);
-            solutionFetchAttempts.delete(topicId);
-            solutionTopicsInFlight.delete(topicId);
-        } else {
-            failed.push(topicId);
-        }
-    });
-    if (failed.length < topicIds.length) {
-        queueUpdate();
-    }
-    const retryable = [];
-    for (const topicId of failed) {
-        const attempt = solutionFetchAttempts.get(topicId) || 0;
-        if (attempt >= FETCH_RETRY_MS.length) {
-            solutionDislikesByTopic.set(topicId, null);
-            solutionTopicsInFlight.delete(topicId);
-        } else {
-            solutionFetchAttempts.set(topicId, attempt + 1);
-            retryable.push({ topicId, attempt });
-        }
-    }
-    if (!retryable.length) {
-        return;
-    }
-    setTimeout(() => {
-        for (const { topicId } of retryable) {
-            solutionTopicsInFlight.delete(topicId);
-        }
-        queueUpdate();
-    }, retryDelayMs(Math.min(...retryable.map((r) => r.attempt))));
-}
-
-function findSolutionCard(anchor) {
-    let card = anchor;
-    for (let hop = 0; card && hop < MAX_CARD_HOPS; hop++, card = card.parentElement) {
-        const upIcons = card.querySelectorAll('svg.fa-up');
-        if (upIcons.length === 1) {
-            return card;
-        }
-        if (upIcons.length > 1) {
-            return null;
-        }
-    }
-    return null;
-}
-
-function solutionCountTextHost(countElement) {
-    for (const node of countElement.childNodes) {
-        if (node.nodeType === Node.ELEMENT_NODE && node.querySelector('svg')) {
-            continue;
-        }
-        return node;
-    }
-    return null;
-}
-
-function setSolutionCardCount(card, dislikes) {
-    let countElement = card.querySelector('[data-lcd-count]');
-    if (!countElement) {
-        const upIcon = card.querySelector('svg.fa-up');
-        const iconWrapper = upIcon && upIcon.parentElement;
-        const upGroup = iconWrapper && iconWrapper.parentElement;
-        if (!upGroup) {
-            return;
-        }
-        countElement = upGroup.cloneNode(true);
-        countElement.setAttribute('data-lcd-count', '');
-        countElement.setAttribute('data-lcd-solution', '');
-        const icon = countElement.querySelector('svg.fa-up');
-        if (icon) {
-            icon.style.transform = 'translate(-50%, -50%) rotate(180deg)';
-            const path = icon.querySelector('path');
-            if (path) {
-                path.setAttribute('d', INACTIVE_UP_PATH);
-            }
-        }
-        for (const el of [countElement, ...countElement.querySelectorAll('.text-sd-success')]) {
-            el.classList.remove('text-sd-success');
-        }
-        let countNode = null;
-        for (const node of [...countElement.childNodes]) {
-            if (icon && node.contains(icon)) {
-                continue;
-            }
-            if (countNode) {
-                node.remove();
-            } else {
-                countNode = node;
-            }
-        }
-        if (!countNode) {
-            countElement.appendChild(document.createTextNode(''));
-        }
-        upGroup.after(countElement);
-    }
-    const textHost = solutionCountTextHost(countElement);
-    const text = formatCount(dislikes);
-    if (textHost && textHost.textContent !== text) {
-        textHost.textContent = text;
-    }
-}
-
-function applySolutionListCounts() {
-    const missing = new Set();
-    for (const anchor of document.querySelectorAll('a[href*="/solutions/"]')) {
-        const match = (anchor.getAttribute('href') || '').match(SOLUTION_CARD_HREF);
-        if (!match) {
-            continue;
-        }
-        const topicId = match[1];
-        const card = findSolutionCard(anchor);
-        if (!card || !card.checkVisibility()) {
-            continue;
-        }
-        if (!solutionDislikesByTopic.has(topicId)) {
-            if (!solutionTopicsInFlight.has(topicId)) {
-                missing.add(topicId);
-            }
-            continue;
-        }
-        const dislikes = solutionDislikesByTopic.get(topicId);
-        if (typeof dislikes === 'number') {
-            setSolutionCardCount(card, dislikes);
-        }
-    }
-    if (missing.size) {
-        fetchSolutionListDislikes([...missing]);
-    }
-}
-
 const VOTE_SETTLE_MS = 1500;
 const watchedButtons = new WeakSet();
 let voteRefetchTimer = null;
@@ -717,19 +546,10 @@ async function update() {
         styledClassName = '';
         commentCountsByQuery.clear();
         commentFetchAttempts.clear();
-        solutionDislikesByTopic.clear();
-        solutionFetchAttempts.clear();
-        // solutionTopicsInFlight stays: it tracks requests still on the wire,
-        // which navigation doesn't cancel, and clearing it here would let a
-        // quick revisit issue duplicate fetches for the same topics. Each
-        // fetch removes its own ids when it settles.
     }
     if (commentCountsEnabled) {
         window.dispatchEvent(new CustomEvent('lcd:tag'));
         applyCommentCounts();
-    }
-    if (solutionListCountsEnabled && SOLUTION_LIST_PATH.test(window.location.pathname)) {
-        applySolutionListCounts();
     }
     if (pageChanged) {
         await refreshCounts(page);
