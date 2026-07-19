@@ -40,18 +40,29 @@ https://addons.mozilla.org/en-US/firefox/addon/dislike-count-for-leetcode/
 
 https://microsoftedge.microsoft.com/addons/detail/dislike-count-for-leetcod/fofjkcfafaiimgdfpfjbkeifenlmaefn
 
-### Repo
+### From source
 
-1. Clone or download this repository:
-   ```sh
-   git clone https://github.com/nex-54/Dislike-Count-For-LeetCode.git
-   ```
-2. Open `chrome://extensions` in Chrome (or `edge://extensions` in Edge).
-3. Enable **Developer mode** (toggle in the top-right corner).
-4. Click **Load unpacked** and select the repository folder.
+Useful for trying unreleased changes. There is no build step — the repository root **is** the
+unpacked extension. Extensions installed this way don't auto-update.
 
-In Firefox, open `about:debugging#/runtime/this-firefox`, click **Load Temporary Add-on**, and
-select the repository's `manifest.json` (temporary add-ons are removed when Firefox restarts).
+First, clone the repository (or download and extract the ZIP via **Code → Download ZIP** on GitHub):
+
+```sh
+git clone https://github.com/nex-54/Dislike-Count-For-LeetCode.git
+```
+
+**Chrome / Edge**
+
+1. Open `chrome://extensions` (`edge://extensions` in Edge).
+2. Enable **Developer mode** (toggle in the top-right corner).
+3. Click **Load unpacked** and select the repository folder (the one containing `manifest.json`).
+
+**Firefox**
+
+1. Open `about:debugging#/runtime/this-firefox`.
+2. Click **Load Temporary Add-on…** and select the repository's `manifest.json`.
+
+Firefox removes temporary add-ons on restart, so you'll need to reload it each session.
 
 ## Development
 
