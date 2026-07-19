@@ -685,10 +685,17 @@ async function update() {
     if (pageChanged) {
         currentPage = page;
         currentCounts = null;
+        cachedButtons = null;
+        styledDownButton = null;
+        styledClassName = '';
         commentCountsByQuery.clear();
         commentFetchAttempts.clear();
         solutionDislikesByTopic.clear();
         solutionFetchAttempts.clear();
+        // solutionTopicsInFlight stays: it tracks requests still on the wire,
+        // which navigation doesn't cancel, and clearing it here would let a
+        // quick revisit issue duplicate fetches for the same topics. Each
+        // fetch removes its own ids when it settles.
     }
     if (commentCountsEnabled) {
         window.dispatchEvent(new CustomEvent('lcd:tag'));
