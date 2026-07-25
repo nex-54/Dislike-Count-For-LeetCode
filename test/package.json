@@ -10,9 +10,6 @@
         "test:comments": "node comments.js"
     },
     "devDependencies": {
-        "playwright": "^1.61.1"
-    },
-    "allowScripts": {
-        "fsevents@2.3.2": true
+        "playwright": "^1.62.0"
     }
 }
