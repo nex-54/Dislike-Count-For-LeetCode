@@ -1,5 +1,5 @@
 import {
-    MAX_ATTEMPTS, RETRY_DELAY_MS,
+    CloudflareBlockError, MAX_ATTEMPTS, RETRY_DELAY_MS,
     checkCountText, delay, waitForAttachedCount, withExtensionContext
 } from './helpers.js';
 
@@ -38,7 +38,7 @@ async function main() {
                 try {
                     await checkTarget(context, target);
                 } catch (err) {
-                    failed.push(target);
+                    failed.push({ ...target, err });
                     console.error(`FAIL - ${target.name} (${target.url}): ${err.message}`);
                 }
             }
@@ -46,6 +46,11 @@ async function main() {
         }
     });
     if (pending.length > 0) {
+        if (pending.every(({ err }) => err instanceof CloudflareBlockError)) {
+            const names = pending.map(({ name }) => name).join(', ');
+            console.log(`::warning::smoke test skipped: Cloudflare blocked every attempt (${names})`);
+            return;
+        }
         process.exit(1);
     }
     console.log('smoke test passed');

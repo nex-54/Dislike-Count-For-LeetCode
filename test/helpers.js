@@ -18,8 +18,10 @@ export const COUNT_TIMEOUT_MS = 30000;
 // Cloudflare sometimes challenges the first navigation (especially from CI
 // IPs) but sets a context-wide clearance cookie shortly after, so a failed
 // attempt usually passes on a later one.
-export const MAX_ATTEMPTS = 4;
+export const MAX_ATTEMPTS = 3;
 export const RETRY_DELAY_MS = 60000;
+
+export class CloudflareBlockError extends Error {}
 
 export function delay(ms) {
     return new Promise((r) => setTimeout(r, ms));
@@ -69,7 +71,7 @@ export async function waitForAttachedCount(page, selector) {
     } catch (err) {
         const title = await page.title();
         if (/just a moment/i.test(title)) {
-            throw new Error(`blocked by Cloudflare challenge (page title: ${JSON.stringify(title)})`, { cause: err });
+            throw new CloudflareBlockError(`blocked by Cloudflare challenge (page title: ${JSON.stringify(title)})`, { cause: err });
         }
         throw new Error(`no ${selector} element appeared within ${COUNT_TIMEOUT_MS}ms`, { cause: err });
     }
