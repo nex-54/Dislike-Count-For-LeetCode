@@ -26,5 +26,7 @@ jobs:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
+      # Smoke only, on purpose: this job gates releases, so the integration and
+      # experimental comments suites run locally via ./test.sh instead.
       - name: Run smoke test
         run: xvfb-run --auto-servernum npm run test:smoke
