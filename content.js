@@ -81,12 +81,13 @@ async function fetchGraphql(body) {
     }
 }
 
-// LeetCode answers a query for something that does not exist (a problem with
-// no editorial, an unknown post id) with HTTP 200 and a null field. Unlike a
-// failed request, that answer is final, so it must not be retried.
-const NOT_FOUND = Symbol('not found');
+// A final answer that holds no dislike count: LeetCode has nothing for the
+// page (it answers a problem with no editorial or an unknown post id with HTTP
+// 200 and a null field), or what it sent is not a number. Unlike a failed
+// request, such an answer must not be retried.
+const NO_COUNT = Symbol('no count');
 
-// Resolves to the queried entity, to NOT_FOUND, or to null if the request failed.
+// Resolves to the queried entity, to NO_COUNT, or to null if the request failed.
 async function fetchEntity(body, field) {
     const payload = await fetchGraphql(body);
     if (!payload) {
@@ -94,9 +95,15 @@ async function fetchEntity(body, field) {
     }
     const entity = payload.data[field];
     if (entity === null && !payload.errors) {
-        return NOT_FOUND;
+        return NO_COUNT;
     }
     return entity || null;
+}
+
+// A dislike count that is not a number must never be rendered: formatting it
+// throws after the like count has already been copied into the dislike button.
+function checkedCounts(counts) {
+    return Number.isFinite(counts.dislikes) ? counts : NO_COUNT;
 }
 
 async function fetchProblemCounts(slug) {
@@ -113,15 +120,18 @@ async function fetchProblemCounts(slug) {
         variables: { titleSlug: slug },
         operationName: 'questionData'
     }, 'question');
-    if (!question || question === NOT_FOUND) {
+    if (!question || question === NO_COUNT) {
         return question;
     }
-    return { likes: question.likes, dislikes: question.dislikes };
+    return checkedCounts({ likes: question.likes, dislikes: question.dislikes });
 }
 
 function reactionsToCounts(article) {
-    if (!article || !Array.isArray(article.reactions)) {
+    if (!article) {
         return null;
+    }
+    if (!Array.isArray(article.reactions)) {
+        return NO_COUNT;
     }
     const counts = { likes: 0, dislikes: 0 };
     for (const { reactionType, count } of article.reactions) {
@@ -131,12 +141,12 @@ function reactionsToCounts(article) {
             counts.dislikes = count;
         }
     }
-    return counts;
+    return checkedCounts(counts);
 }
 
 async function fetchReactionCounts(body, articleField) {
     const article = await fetchEntity(body, articleField);
-    return article === NOT_FOUND ? NOT_FOUND : reactionsToCounts(article);
+    return article === NO_COUNT ? NO_COUNT : reactionsToCounts(article);
 }
 
 function fetchEditorialCounts(slug) {
@@ -284,7 +294,7 @@ async function refreshCounts(page, attempt = 0, token = ++refreshToken) {
     if (token !== refreshToken || !currentPage || currentPage.key !== page.key) {
         return;
     }
-    if (counts === NOT_FOUND) {
+    if (counts === NO_COUNT) {
         return;
     }
     if (!counts) {
