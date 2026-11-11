@@ -23,6 +23,13 @@ function manifestFiles() {
             files.add(js);
         }
     }
+    // Chrome reads service_worker and Firefox reads scripts.
+    const background = manifest.background || {};
+    for (const js of [background.service_worker, ...(background.scripts || [])]) {
+        if (js) {
+            files.add(js);
+        }
+    }
     if (manifest.action && manifest.action.default_popup) {
         files.add(manifest.action.default_popup);
     }

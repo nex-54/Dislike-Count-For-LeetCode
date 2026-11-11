@@ -27,10 +27,11 @@ export function delay(ms) {
     return new Promise((r) => setTimeout(r, ms));
 }
 
-export async function withExtensionContext(tmpPrefix, fn) {
+export async function withExtensionContext(tmpPrefix, fn, { ignoreDefaultArgs } = {}) {
     const userDataDir = mkdtempSync(join(tmpdir(), tmpPrefix));
     const context = await chromium.launchPersistentContext(userDataDir, {
         headless: false,
+        ignoreDefaultArgs,
         args: [
             `--disable-extensions-except=${EXTENSION_DIR}`,
             `--load-extension=${EXTENSION_DIR}`

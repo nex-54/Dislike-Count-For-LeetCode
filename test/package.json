@@ -3,8 +3,9 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "test": "node files.js && node smoke.js && node integration.js && node comments.js",
+        "test": "node files.js && node icon.js && node smoke.js && node integration.js && node comments.js",
         "test:files": "node files.js",
+        "test:icon": "node icon.js",
         "test:smoke": "node smoke.js",
         "test:integration": "node integration.js",
         "test:comments": "node comments.js"
