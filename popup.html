@@ -1,7 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8">
+    <meta name="color-scheme" content="light dark">
+    <title>Dislike Count for LeetCode</title>
     <style>
         body {
             font-family: system-ui, sans-serif;
@@ -11,36 +13,47 @@
             width: min-content;
             min-width: 260px;
         }
+        /* Two columns: the checkbox, then the label text with the hint under it. */
+        .option {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            column-gap: 8px;
+        }
         label {
-            display: flex;
+            display: grid;
+            grid-template-columns: subgrid;
+            grid-column: 1 / -1;
             align-items: center;
-            gap: 8px;
             cursor: pointer;
             white-space: nowrap;
         }
-        label + label {
-            margin-top: 8px;
+        input {
+            margin: 0;
         }
         .hint {
-            margin: 0;
+            grid-column: 2;
+            margin: 4px 0 0;
             color: #666;
+            white-space: nowrap;
         }
-        .hint + .hint {
-            margin-top: 4px;
-        }
-        .hint + label {
-            margin-top: 10px;
+        @media (prefers-color-scheme: dark) {
+            .hint {
+                color: #aaa;
+            }
         }
     </style>
 </head>
 <body>
-    <p class="hint">Experimental: this relies on LeetCode page internals and may stop working if the site changes.</p>
-    <p class="hint">It also sends extra GraphQL requests, which may run into LeetCode's rate limits.</p>
-    <p class="hint">If LeetCode starts rate-limiting you, switch this option off.</p>
-    <label>
-        <input type="checkbox" id="comment-counts">
-        <span>Show dislike counts on comments</span>
-    </label>
+    <div class="option">
+        <label>
+            <input type="checkbox" id="comment-counts" aria-describedby="comment-counts-hint">
+            <span>Show dislike counts on comments</span>
+        </label>
+        <p class="hint" id="comment-counts-hint">
+            If LeetCode starts rate-limiting you,<br>
+            switch this option off.
+        </p>
+    </div>
     <script src="popup.js"></script>
 </body>
 </html>
