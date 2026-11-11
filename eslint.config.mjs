@@ -4,7 +4,7 @@ import globals from 'globals';
 export default [
     js.configs.recommended,
     {
-        files: ['content.js', 'inject.js', 'popup.js'],
+        files: ['background.js', 'active.js', 'content.js', 'inject.js', 'popup.js'],
         languageOptions: {
             sourceType: 'script',
             globals: {

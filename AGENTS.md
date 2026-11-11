@@ -13,6 +13,7 @@ Human-facing documentation lives in `README.md`.
 This Manifest V3 extension restores LeetCode dislike counts on problem, editorial, solution, and discuss pages using plain JavaScript, without a bundler.
 
 - `manifest.json` registers `content.js` (isolated-world counts) and `inject.js` (MAIN-world comment tagging).
+- `active.js` reports leetcode.com tabs to `background.js`, which swaps the default gray toolbar icon (`icons/*-gray.png`) for the colored one on that tab.
 - `popup.html` loads `popup.js` for the opt-in comment toggle.
 - `test/` contains the offline `files.js` check and Playwright suites; `.github/workflows/` contains CI/releases.
 - `icons/`, `promo/`, and `screenshots/` contain assets.
@@ -27,7 +28,7 @@ npm --prefix test run test:files  # file-list check; no browser or network
 ./build.sh                        # package dislike-count-for-leetcode-<version>.zip
 ```
 
-For a single browser suite, run `npm ci` and `npx playwright install chromium` inside `test/`, then `npm run test:<suite>`: `smoke`, `integration`, or `comments`.
+For a single browser suite, run `npm ci` and `npx playwright install chromium` inside `test/`, then `npm run test:<suite>`: `icon`, `smoke`, `integration`, or `comments`.
 
 ## Testing Guidelines
 
