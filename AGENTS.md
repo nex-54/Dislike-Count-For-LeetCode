@@ -32,10 +32,12 @@ For a single browser suite, run `npm ci` and `npx playwright install chromium` i
 
 ## Testing Guidelines
 
-Add `test/<feature>.js` using `test/helpers.js`; wire both `test:<feature>` and `test` in `test/package.json`. Run lint and focused checks while iterating; run `./test.sh` before opening a PR.
+Add `test/<feature>.js` using `test/helpers.js`; wire both `test:<feature>` and `test` in `test/package.json`. Run lint and focused checks while iterating; run `./test.sh` before pushing or opening a PR.
 
 ## Commits, Pull Requests & Releases
 
 Omit `Co-Authored-By` trailers.
+
+Commit on `main` and push directly to `origin/main`; create a branch or PR only when asked.
 
 Change the `manifest.json` version only for releases.
