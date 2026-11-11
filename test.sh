@@ -2,10 +2,12 @@
 set -eu
 cd "$(dirname "$0")"
 
-# files.js imports eslint.config.mjs, so the suite needs root tooling too.
+# Root tooling: lint needs it, and so does files.js, which imports eslint.config.mjs.
 if [ ! -d node_modules/@eslint/js ]; then
 	npm ci
 fi
+
+npm run lint
 
 cd test
 

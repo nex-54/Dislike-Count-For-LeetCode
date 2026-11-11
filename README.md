@@ -93,7 +93,7 @@ between them by clicking the Editorial/Solutions tabs and a solution post, verif
 correctly across in-app (SPA) navigation without a page reload, and a comments test that
 enables the opt-in comment counts through the popup and checks that editorial and discuss post
 comments show them. CI (and the release gate) runs only the smoke test; the other tests run locally
-via `./test.sh`.
+via `./test.sh`, which runs ESLint first.
 
 ```sh
 ./test.sh

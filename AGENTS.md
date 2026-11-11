@@ -25,7 +25,7 @@ This Manifest V3 extension restores LeetCode dislike counts on problem, editoria
 npm ci                            # root tooling; required by lint and test:files
 npm run lint                      # ESLint
 npm --prefix test run test:files  # file-list check; no browser or network
-./test.sh                         # full suite; installs missing dependencies and Chromium
+./test.sh                         # lint + full suite; installs missing dependencies and Chromium
 ./build.sh                        # package dislike-count-for-leetcode-<version>.zip
 ```
 
