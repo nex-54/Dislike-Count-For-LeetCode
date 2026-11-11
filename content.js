@@ -73,12 +73,30 @@ async function fetchGraphql(body) {
         if (!response.ok) {
             return null;
         }
-        const { data } = await response.json();
-        return data || null;
+        const payload = await response.json();
+        return payload && payload.data ? payload : null;
     } catch (err) {
         console.debug('[Dislike-Count-For-LeetCode] fetch failed:', err);
         return null;
     }
+}
+
+// LeetCode answers a query for something that does not exist (a problem with
+// no editorial, an unknown post id) with HTTP 200 and a null field. Unlike a
+// failed request, that answer is final, so it must not be retried.
+const NOT_FOUND = Symbol('not found');
+
+// Resolves to the queried entity, to NOT_FOUND, or to null if the request failed.
+async function fetchEntity(body, field) {
+    const payload = await fetchGraphql(body);
+    if (!payload) {
+        return null;
+    }
+    const entity = payload.data[field];
+    if (entity === null && !payload.errors) {
+        return NOT_FOUND;
+    }
+    return entity || null;
 }
 
 async function fetchProblemCounts(slug) {
@@ -90,15 +108,15 @@ async function fetchProblemCounts(slug) {
             }
         }
     `;
-    const data = await fetchGraphql({
+    const question = await fetchEntity({
         query,
         variables: { titleSlug: slug },
         operationName: 'questionData'
-    });
-    if (!data || !data.question) {
-        return null;
+    }, 'question');
+    if (!question || question === NOT_FOUND) {
+        return question;
     }
-    return { likes: data.question.likes, dislikes: data.question.dislikes };
+    return { likes: question.likes, dislikes: question.dislikes };
 }
 
 function reactionsToCounts(article) {
@@ -117,8 +135,8 @@ function reactionsToCounts(article) {
 }
 
 async function fetchReactionCounts(body, articleField) {
-    const data = await fetchGraphql(body);
-    return reactionsToCounts(data && data[articleField]);
+    const article = await fetchEntity(body, articleField);
+    return article === NOT_FOUND ? NOT_FOUND : reactionsToCounts(article);
 }
 
 function fetchEditorialCounts(slug) {
@@ -266,6 +284,9 @@ async function refreshCounts(page, attempt = 0, token = ++refreshToken) {
     if (token !== refreshToken || !currentPage || currentPage.key !== page.key) {
         return;
     }
+    if (counts === NOT_FOUND) {
+        return;
+    }
     if (!counts) {
         if (attempt >= FETCH_RETRY_MS.length) {
             return;
@@ -364,8 +385,8 @@ function fetchCommentDislikes(queryKeyJson) {
         if (!spec) {
             return null;
         }
-        const data = await fetchGraphql({ query: spec.query, variables, operationName });
-        const comments = data && spec.extract(data);
+        const payload = await fetchGraphql({ query: spec.query, variables, operationName });
+        const comments = payload && spec.extract(payload.data);
         if (!comments) {
             return null;
         }
