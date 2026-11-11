@@ -33,6 +33,8 @@ jobs:
       - name: Build zip
         if: steps.check.outputs.exists != 'true'
         run: ./build.sh
+      # --target pins the tag to the commit that was tested and zipped. Without it
+      # gh tags whatever main is by then, which may have moved on since the push.
       - name: Create release with zip
         if: steps.check.outputs.exists != 'true'
         env:
@@ -40,4 +42,5 @@ jobs:
         run: |
           gh release create "v${{ steps.v.outputs.version }}" \
             dislike-count-for-leetcode-*.zip \
+            --target "$GITHUB_SHA" \
             --title "v${{ steps.v.outputs.version }}" --generate-notes
