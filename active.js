@@ -9,7 +9,13 @@ async function reportActive() {
     }
 }
 
-reportActive();
+// A prerendered page runs content scripts before it is shown, and showing it
+// is a navigation that resets the tab's icon, so it reports once activated.
+if (document.prerendering) {
+    document.addEventListener('prerenderingchange', reportActive, { once: true });
+} else {
+    reportActive();
+}
 // A page restored from the back/forward cache does not rerun content scripts,
 // but the navigation that restored it still reset the tab's icon.
 window.addEventListener('pageshow', (event) => {
