@@ -17,6 +17,7 @@ This Manifest V3 extension restores LeetCode dislike counts on problem, editoria
 - `popup.html` loads `popup.js` for the opt-in comment toggle.
 - `test/` contains the offline `files.js` check and Playwright suites; `.github/workflows/` contains CI/releases.
 - `icons/`, `promo/`, and `screenshots/` contain assets.
+- `notes-local/` holds git-ignored working notes, such as dated review write-ups named `YYYY-MM-DD_<topic>-<agent>.md`; it is never committed or shipped.
 
 ## Development Commands
 
